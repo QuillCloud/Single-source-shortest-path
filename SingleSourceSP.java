@@ -12,7 +12,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.net.URI;
-import java.text.DecimalFormat;
 
 public class SingleSourceSP {
 	// My counter UPDATE
@@ -76,7 +75,6 @@ public class SingleSourceSP {
     	// node store the key, content store the value
        private LongWritable node = new LongWritable();
        private Text content = new Text();
-       private DecimalFormat df = new DecimalFormat("0.0");
         @Override
        public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
         	// split by '|', get 3 parts
@@ -105,7 +103,7 @@ public class SingleSourceSP {
         		node.set(Integer.parseInt(node_value[0]));
         		// updated distance by plus base value with adjacency node's distance from current node
         		if (base != Double.MAX_VALUE) 
-        			update_value = df.format(base + Double.parseDouble(node_value[1]));
+        			update_value = Double.toString(base + Double.parseDouble(node_value[1]));
         		// combine the updated value and current node's path as value
         		content.set(update_value + "|" + sp1[1]);
         		context.write(node, content);
@@ -118,7 +116,6 @@ public class SingleSourceSP {
     public static class SSSPReducer extends Reducer<LongWritable, Text, LongWritable, Text> {
     	// content store the value
     	private Text content = new Text();
-    	private DecimalFormat df = new DecimalFormat("0.0");
         @Override
         public void reduce(LongWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
         	// original is the distance of current node
@@ -171,7 +168,7 @@ public class SingleSourceSP {
         	adj_node += " ";
         	// change path_length if shortest_distance is not inifinty
         	if (shortest_distance != Double.MAX_VALUE)
-        		path_length = df.format(shortest_distance);
+        		path_length = Double.toString(shortest_distance);
         	// the key is node id
         	// the value is (updated) distance,(updated) path and adjacency list joined by '|', eg "0|0.0|2:5.0 1:10.0" 
         	content.set(path_length + "|" + path + "|" + adj_node);
@@ -188,7 +185,7 @@ public class SingleSourceSP {
     	@Override
     	public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
     		// split to get node id its distance, path, adjacency list
-    		String[] sp1 = value.toString().split("\\|");
+    		String[] sp1 = value.toString().split("\\|");	
     		// only keep the node that has a path to target
     		if (!sp1[1].equals("null")) {
     			String[] sp1_1 = sp1[0].split("\\s+");
